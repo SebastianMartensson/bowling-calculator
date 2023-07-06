@@ -21,19 +21,23 @@ export function calculateScore(req: Request, res: Response, next: NextFunction):
         }
 
         if (currentFrame[i] === 10) {
-          const strikeScore = currentFrame[i] + strikeBonus(frameIndex, gameProgressionFrames, 0);
-          if (strikeScore !== 0) {
+          const strikeScore = strikeBonus(frameIndex, gameProgressionFrames, 0);
+          if (strikeScore > 10) {
             totalScore += strikeScore;
             scoreByFrame.push(totalScore);
-          }
-          continue;
-        } else if (currentFrame[i] + currentFrame[i + 1] === 10) {
-          const spareScore = currentFrame[i] + currentFrame[i + 1] + spareBonus(frameIndex, gameProgressionFrames);
-          if (spareScore > 0) {
-            totalScore += spareScore;
+            continue;
+          }else if (strikeScore === 10){
+            totalScore += strikeScore;
             scoreByFrame.push(totalScore);
+            continue;
           }
+        } else if (currentFrame[i] + currentFrame[i + 1] === 10) {
+          const spareScore = spareBonus(frameIndex, gameProgressionFrames);
+          if (spareScore > 0) {
+            totalScore += currentFrame[i] + currentFrame[i + 1] + spareScore;
+            scoreByFrame.push(totalScore);
           break;
+          }
         } else if (i >= 1) {
           totalScore += currentFrame[0] + currentFrame[1];
           scoreByFrame.push(totalScore);
@@ -52,15 +56,17 @@ export function calculateScore(req: Request, res: Response, next: NextFunction):
 function strikeBonus(frameIndex: number, gameProgressionFrames: GameProgressionFrames, lastFrameCounter: number): number {
   let nextFrameIndex = frameIndex + 1;
   let nextFrame = gameProgressionFrames[nextFrameIndex];
+  const frame = gameProgressionFrames[frameIndex];
 
   if (frameIndex === 9) {
-    const frame = gameProgressionFrames[frameIndex];
     const secondStrike = frame[lastFrameCounter + 1];
     const thirdStrike = frame[lastFrameCounter + 2];
     if (secondStrike && thirdStrike) {
-      return secondStrike + thirdStrike;
+      return frame[lastFrameCounter] + secondStrike + thirdStrike;
     } else if (secondStrike) {
-      return secondStrike;
+      return frame[lastFrameCounter] + secondStrike;
+    } else{
+      return frame[lastFrameCounter];
     }
   }
 
@@ -70,11 +76,13 @@ function strikeBonus(frameIndex: number, gameProgressionFrames: GameProgressionF
       nextFrameIndex = frameIndex + 2;
       nextFrame = gameProgressionFrames[nextFrameIndex];
       const thirdFrameRoll = nextFrame && frameIndex !== 7 ? nextFrame[0] : 0;
-      return secondFrameRoll + thirdFrameRoll;
+      return frame[lastFrameCounter] + secondFrameRoll + thirdFrameRoll;
     } else if (nextFrame.length === 2) {
       const nextRoll = nextFrame[0];
       const secondNextRoll = nextFrame[1];
-      return nextRoll + secondNextRoll;
+      return frame[lastFrameCounter] + nextRoll + secondNextRoll;
+    }else if (frameIndex === 8){
+      return frame[lastFrameCounter];
     }
   }
 
@@ -104,8 +112,8 @@ function lastFrame(currentFrame: number[], frameIndex: number, gameProgressionFr
   let lastFrameScore = 0;
   for (let i = 0; i < currentFrame.length; i++) {
     if (currentFrame[i] === 10) {
-      const strikeScore = 10 + strikeBonus(frameIndex, gameProgressionFrames, i);
-      if (strikeScore !== 0) {
+      const strikeScore = strikeBonus(frameIndex, gameProgressionFrames, i);
+      if (strikeScore > 0) {
         lastFrameScore += strikeScore;
         bonus = true;
       }

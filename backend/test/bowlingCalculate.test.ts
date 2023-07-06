@@ -1,10 +1,10 @@
 import app from '../src/app';
 import request from 'supertest';
-/* import { resetGame } from '../src/controller/bowlingController'; */
+import { resetGame } from '../src/controller/bowlingController';
 
-/* beforeAll(() => {
+beforeAll(() => {
   resetGame();
-}); */
+});
 
 const strike = {
   rolls: [[10], [2, 8], [4, 0]], // frame1: 14, frame2: 18
